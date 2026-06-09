@@ -1,0 +1,65 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Next.js
+.next/
+**/.next/
+out/
+**/out/
+
+# Production build
+/build
+**/build/
+**/dist/
+
+# Test coverage
+coverage/
+**/coverage/
+
+# Build cache
+.turbo/
+**/.turbo/
+*.tsbuildinfo
+
+# Misc
+.DS_Store
+Thumbs.db
+*.pem
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local env files
+.env
+**/.env
+.env*.local
+
+# TypeScript
+next-env.d.ts
+
+# Vendor / tooling
+.claude/
+.vscode/
+.idea/
+
+# Misc data
+/backups
+**/backups/
+
+# Telegram session
+*.session
+
+# Logs
+*.log
+
+# Temp
+*.tmp
+tmp/
+
+# Eski deployment/debug skriptlari (loyihaga taalluqli emas)
+git-setup.sh
+git-debug.sh

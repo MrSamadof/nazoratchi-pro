@@ -1,0 +1,97 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: nazoratchi-mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME}
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - nazoratchi-net
+    expose:
+      - "27017"
+
+  # Express API (port 4000) — frontend shu yerga /api/* ni rewrites qiladi.
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: nazoratchi-backend:latest
+    container_name: nazoratchi-backend
+    restart: always
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      API_PORT: 4000
+      MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/${MONGO_DB_NAME}?authSource=admin
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - nazoratchi-net
+
+  # Worker — cron joblar + outgoing Telegram (backend image, boshqa CMD).
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: nazoratchi-backend:latest
+    container_name: nazoratchi-worker
+    restart: always
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/${MONGO_DB_NAME}?authSource=admin
+    command: ["npm", "run", "worker"]
+    # Worker'da HTTP server yo'q — backend image'ining /api/health healthcheck'i bu yerda mos kelmaydi.
+    healthcheck:
+      disable: true
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - nazoratchi-net
+
+  # Next.js UI (port 3000). BACKEND_URL — server-side rewrites uchun.
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        # Next.js /api/* rewrites build vaqtida muzlatiladi — backend manzilini shu yerda beramiz.
+        BACKEND_URL: http://backend:4000
+    image: nazoratchi-web:latest
+    container_name: nazoratchi-web
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Next.js standalone server.js process.env.HOSTNAME'ga bog'lanadi; Docker uni
+      # container ID'ga o'rnatadi → faqat eth0'da tinglaydi (loopback healthcheck uzilади).
+      # 0.0.0.0 — barcha interfeyslar, shu jumladan 127.0.0.1.
+      HOSTNAME: "0.0.0.0"
+      BACKEND_URL: http://backend:4000
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    networks:
+      - nazoratchi-net
+
+volumes:
+  mongo-data:
+    driver: local
+
+networks:
+  nazoratchi-net:
+    driver: bridge

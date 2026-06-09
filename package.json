@@ -1,0 +1,25 @@
+{
+  "name": "nazoratchi-pro",
+  "version": "3.0.0",
+  "description": "Nazoratchi Pro — root workspace (frontend + backend)",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
+    "dev": "concurrently -n backend,worker,frontend -c blue,magenta,green \"npm:dev:backend\" \"npm:dev:worker\" \"npm:dev:frontend\"",
+    "dev:web": "concurrently -n backend,frontend -c blue,green \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:worker": "npm run worker:dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "worker:dev": "npm run worker:dev --prefix backend",
+    "seed": "npm run seed --prefix backend",
+    "seed:demo": "npm run seed:demo --prefix backend",
+    "test": "npm run test --prefix backend",
+    "lint": "npm run lint --prefix frontend",
+    "typecheck": "npm run typecheck --prefix backend && npm run typecheck --prefix frontend",
+    "db:up": "docker compose up -d mongo",
+    "db:down": "docker compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

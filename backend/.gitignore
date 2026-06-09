@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Build
+dist/
+*.tsbuildinfo
+
+# Env va secretlar
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Loglar
+logs/
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# MongoDB volume (Docker)
+data/
+
+# Backups
+backups/
+*.dump
+
+# Test
+coverage/
+.nyc_output/
+
+# Google credentials
+google-credentials.json
+service-account.json

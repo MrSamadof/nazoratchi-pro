@@ -1,0 +1,186 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Surfaces — warm off-white */
+  --background: oklch(0.985 0.005 80);
+  --background-2: oklch(0.97 0.006 80);
+  --card: #ffffff;
+  --card-foreground: oklch(0.20 0.012 268);
+  --popover: #ffffff;
+  --popover-foreground: oklch(0.20 0.012 268);
+
+  /* Ink — cool dark gray */
+  --foreground: oklch(0.20 0.012 268);
+  --ink-2: oklch(0.46 0.014 268);
+  --ink-3: oklch(0.62 0.012 268);
+
+  /* Lines */
+  --border: oklch(0.93 0.005 80);
+  --border-2: oklch(0.88 0.006 80);
+  --input: oklch(0.88 0.006 80);
+
+  /* Accent — indigo */
+  --primary: oklch(0.54 0.17 268);
+  --primary-foreground: #ffffff;
+  --accent: oklch(0.96 0.035 268);
+  --accent-foreground: oklch(0.54 0.17 268);
+  --accent-line: oklch(0.88 0.06 268);
+
+  /* Secondary */
+  --secondary: oklch(0.97 0.006 80);
+  --secondary-foreground: oklch(0.20 0.012 268);
+
+  /* Muted */
+  --muted: oklch(0.97 0.006 80);
+  --muted-foreground: oklch(0.46 0.014 268);
+
+  /* Status */
+  --emerald: oklch(0.62 0.13 162);
+  --emerald-soft: oklch(0.96 0.04 162);
+  --amber: oklch(0.74 0.14 78);
+  --amber-soft: oklch(0.96 0.05 85);
+  --amber-ink: oklch(0.46 0.12 70);
+  --rose: oklch(0.60 0.17 22);
+  --rose-soft: oklch(0.96 0.04 22);
+
+  --destructive: oklch(0.60 0.17 22);
+  --destructive-foreground: #ffffff;
+
+  --ring: oklch(0.54 0.17 268);
+
+  /* Radius */
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-lg: 20px;
+
+  /* Shadows */
+  --shadow-card: 0 1px 0 rgba(20,20,30,.02), 0 1px 2px rgba(20,20,30,.04);
+  --shadow-pop: 0 12px 32px -8px rgba(20,20,30,.18), 0 2px 8px rgba(20,20,30,.06);
+}
+
+.dark {
+  --background: oklch(0.18 0.012 268);
+  --background-2: oklch(0.22 0.012 268);
+  --card: oklch(0.22 0.012 268);
+  --card-foreground: oklch(0.96 0.005 80);
+  --popover: oklch(0.22 0.012 268);
+  --popover-foreground: oklch(0.96 0.005 80);
+  --foreground: oklch(0.96 0.005 80);
+  --ink-2: oklch(0.78 0.012 268);
+  --ink-3: oklch(0.60 0.012 268);
+  --border: oklch(1 0 0 / 10%);
+  --border-2: oklch(1 0 0 / 14%);
+  --input: oklch(1 0 0 / 15%);
+  --primary: oklch(0.72 0.16 268);
+  --primary-foreground: oklch(0.18 0.012 268);
+  --accent: oklch(0.26 0.05 268);
+  --accent-foreground: oklch(0.85 0.10 268);
+  --accent-line: oklch(0.40 0.10 268);
+  --secondary: oklch(0.26 0.012 268);
+  --secondary-foreground: oklch(0.96 0.005 80);
+  --muted: oklch(0.26 0.012 268);
+  --muted-foreground: oklch(0.78 0.012 268);
+  --emerald-soft: oklch(0.26 0.05 162);
+  --amber-soft: oklch(0.30 0.06 78);
+  --amber-ink: oklch(0.80 0.14 78);
+  --rose-soft: oklch(0.30 0.07 22);
+  --destructive: oklch(0.70 0.18 22);
+  --destructive-foreground: #ffffff;
+  --ring: oklch(0.72 0.16 268);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-background-2: var(--background-2);
+  --color-emerald: var(--emerald);
+  --color-emerald-soft: var(--emerald-soft);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-amber-ink: var(--amber-ink);
+  --color-rose: var(--rose);
+  --color-rose-soft: var(--rose-soft);
+  --color-accent-line: var(--accent-line);
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@layer base {
+  * {
+    @apply border-[color:var(--border)];
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Mobil menyu — silliq slide + fade animatsiyasi (Radix data-state orqali) */
+@keyframes nz-drawer-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+@keyframes nz-drawer-out {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+@keyframes nz-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes nz-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.nz-drawer[data-state='open'] {
+  animation: nz-drawer-in 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.nz-drawer[data-state='closed'] {
+  animation: nz-drawer-out 0.24s cubic-bezier(0.4, 0, 1, 1);
+}
+.nz-overlay[data-state='open'] {
+  animation: nz-fade-in 0.3s ease-out;
+}
+.nz-overlay[data-state='closed'] {
+  animation: nz-fade-out 0.24s ease-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nz-drawer[data-state='open'],
+  .nz-drawer[data-state='closed'],
+  .nz-overlay[data-state='open'],
+  .nz-overlay[data-state='closed'] {
+    animation-duration: 0.01ms;
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "name": "nazoratchi-backend",
+  "version": "3.0.0",
+  "description": "Nazoratchi Pro — Express API + Worker",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "tsx watch api/main.ts",
+    "start": "tsx api/main.ts",
+    "worker": "tsx worker/main.ts",
+    "worker:dev": "tsx watch worker/main.ts",
+    "seed": "tsx src/scripts/seed.ts",
+    "seed:demo": "tsx src/scripts/seed-demo-data.ts",
+    "backup": "tsx src/scripts/backup.ts",
+    "job": "tsx src/scripts/run-job.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.7.9",
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
+    "dotenv": "^16.4.7",
+    "express": "^5.2.1",
+    "grammy": "^1.32.0",
+    "mongoose": "^8.9.2",
+    "nazoratchi-pro": "file:..",
+    "node-cron": "^3.0.3",
+    "pino": "^9.5.0",
+    "pino-pretty": "^13.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.10.5",
+    "@types/node-cron": "^3.0.11",
+    "mongodb-memory-server": "^11.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
