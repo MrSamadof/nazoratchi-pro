@@ -15,8 +15,8 @@ import { dailyRewardsJob } from './daily-rewards.job.js';
  * Vaqt zonasi: Asia/Tashkent
  */
 export function startJobs(): void {
-  // Har soatda — Billz savdolarni sinxronizatsiya
-  cron.schedule('0 * * * *', () => void syncBillzJob(), { timezone: TIMEZONE });
+  // Har 15 daqiqada — Billz savdolarni sinxronizatsiya (bugungi kun deyarli real-time)
+  cron.schedule('*/15 * * * *', () => void syncBillzJob(), { timezone: TIMEZONE });
 
   // Har kuni 09:05 — hali kelmaganlarga eslatma
   cron.schedule('5 9 * * *', () => void sendMorningReminders(), { timezone: TIMEZONE });
@@ -39,7 +39,7 @@ export function startJobs(): void {
   logger.info(
     {
       jobs: [
-        'billz-sync (hourly)',
+        'billz-sync (every 15m)',
         'morning-reminder (09:05)',
         'daily-report (21:00)',
         'mark-absentees (23:30)',

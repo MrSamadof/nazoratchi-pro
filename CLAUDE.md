@@ -175,7 +175,7 @@ Registered in `backend/src/jobs/index.ts` (`startJobs`), timezone Asia/Tashkent:
 
 | Job | Schedule | Purpose |
 |-----|----------|---------|
-| `billz-sync` | hourly (`0 * * * *`) | Pull today's sales from Billz → `BillzSale` cache |
+| `billz-sync` | every 15 min (`*/15 * * * *`) | Pull today's sales from Billz → `BillzSale` cache |
 | `morning-reminder` | daily 09:05 | Telegram reminder to employees who haven't checked in |
 | `daily-report` | daily 21:00 | Attendance + sales + leaderboard + optional AI analysis → managers/CEO |
 | `mark-absentees` | daily 23:30 | Mark no-shows `absent` + apply penalties (skips `day_off`) |

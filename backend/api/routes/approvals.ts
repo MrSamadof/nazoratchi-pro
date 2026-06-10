@@ -17,9 +17,16 @@ approvalsRouter.use(loadSession);
 
 const createDto = z.object({
   type: z.enum(APPROVAL_TYPES),
-  requestedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  requestedTime: z.string().regex(/^([01]?\d|2[0-3]):[0-5]\d$/).optional().default(''),
-  reason: z.string().trim().min(3).max(500),
+  requestedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana formati noto'g'ri"),
+  // Vaqt ixtiyoriy — bo'sh ('') yoki HH:mm. (Dam olish so'rovida vaqt yo'q.)
+  // Regex bo'sh satrni ham qabul qiladi, aks holda `.default('')` regexga tushib
+  // "Invalid" xatosi beradi (default qiymat ham inner schema bilan tekshiriladi).
+  requestedTime: z
+    .string()
+    .regex(/^(([01]?\d|2[0-3]):[0-5]\d)?$/, "Vaqt formati noto'g'ri")
+    .optional()
+    .default(''),
+  reason: z.string().trim().min(3).max(500, "Sabab juda uzun"),
 });
 
 approvalsRouter.get('/', requireAuth, async (req: Request, res: Response) => {

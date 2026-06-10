@@ -1,9 +1,10 @@
+import type { Types } from 'mongoose';
 import { Sale } from '../sales/sales.model.js';
 import { BillzSale } from '../billz/billz.model.js';
 import { Attendance } from '../attendances/attendances.model.js';
 import { User } from '../users/users.model.js';
 import { Store } from '../stores/stores.model.js';
-import { startOfTashkentDay, addDays } from '../../core/utils/date.js';
+import { startOfTashkentDay, addDays, formatApiDate } from '../../core/utils/date.js';
 
 export interface CeoInsights {
   today: {
@@ -27,17 +28,12 @@ export interface CeoInsights {
     hasBillz: boolean;
     weeklyTarget: number;
     monthlyTarget: number;
+    todayTotal: number;
+    todayItems: number;
     weekTotal: number;
     weekItems: number;
     trend: number[];
   }>;
-}
-
-function fmt(d: Date): string {
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(d.getUTCDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
 }
 
 /**
@@ -57,6 +53,8 @@ export async function getCeoInsights(): Promise<CeoInsights> {
     attByDay,
     storeAgg,
     manualStoreAgg,
+    billzTodayByStore,
+    manualTodayByStore,
     stores,
   ] = await Promise.all([
     Attendance.find({ date: today }),
@@ -154,6 +152,16 @@ export async function getCeoInsights(): Promise<CeoInsights> {
         },
       },
     ]),
+    // Bugungi savdo — do'kon bo'yicha (Billz puli + dona).
+    BillzSale.aggregate<{ _id: Types.ObjectId; total: number; items: number }>([
+      { $match: { date: today } },
+      { $group: { _id: '$storeId', total: { $sum: '$totalAmount' }, items: { $sum: '$itemCount' } } },
+    ]),
+    // Bugungi manual savdo — do'kon bo'yicha faqat DONA (quantity).
+    Sale.aggregate<{ _id: Types.ObjectId; qty: number }>([
+      { $match: { date: today } },
+      { $group: { _id: '$storeId', qty: { $sum: '$quantity' } } },
+    ]),
     // Ofislar savdo qilmaydi — reyting/taqqoslashga kirmaydi.
     Store.find({ isActive: true, kind: { $ne: 'office' } }).select(
       'name weeklyTarget monthlyTarget hasBillz',
@@ -173,7 +181,7 @@ export async function getCeoInsights(): Promise<CeoInsights> {
   const itemsByDay: number[] = [];
   const presentByDay: number[] = [];
   for (let i = 6; i >= 0; i--) {
-    const key = fmt(addDays(today, -i));
+    const key = formatApiDate(addDays(today, -i));
     // Pul faqat Billz'dan; mahsulot soni = Billz dona + manual dona.
     salesByDay.push(billzMap.get(key)?.total ?? 0);
     itemsByDay.push((billzMap.get(key)?.items ?? 0) + (manualMap.get(key)?.qty ?? 0));
@@ -183,13 +191,13 @@ export async function getCeoInsights(): Promise<CeoInsights> {
   const thisWeekSales = salesByDay.reduce((s, v) => s + v, 0);
   let prevWeekSales = 0;
   for (let i = 13; i >= 7; i--) {
-    const key = fmt(addDays(today, -i));
+    const key = formatApiDate(addDays(today, -i));
     prevWeekSales += billzMap.get(key)?.total ?? 0;
   }
   const delta = prevWeekSales > 0 ? ((thisWeekSales - prevWeekSales) / prevWeekSales) * 100 : 0;
 
   const trendKeys: string[] = [];
-  for (let i = 6; i >= 0; i--) trendKeys.push(fmt(addDays(today, -i)));
+  for (let i = 6; i >= 0; i--) trendKeys.push(formatApiDate(addDays(today, -i)));
   const trendIdx = new Map(trendKeys.map((k, i) => [k, i]));
 
   const storeMap = new Map<string, { total: number; items: number; trend: number[] }>();
@@ -219,6 +227,10 @@ export async function getCeoInsights(): Promise<CeoInsights> {
     entry.items += s.qty;
   }
 
+  // Bugungi per-do'kon (id bo'yicha — nom takrorlanishi mumkin).
+  const billzTodayMap = new Map(billzTodayByStore.map((b) => [b._id.toString(), b]));
+  const manualTodayMap = new Map(manualTodayByStore.map((m) => [m._id.toString(), m]));
+
   return {
     today: { checkedIn, late, absent, totalPenalty, totalEmployees },
     week: {
@@ -232,12 +244,18 @@ export async function getCeoInsights(): Promise<CeoInsights> {
     stores: stores
       .map((s) => {
         const w = storeMap.get(s.name);
+        const idStr = s._id.toString();
+        const bt = billzTodayMap.get(idStr);
+        const mt = manualTodayMap.get(idStr);
         return {
-          id: s._id.toString(),
+          id: idStr,
           name: s.name,
           hasBillz: !!s.hasBillz,
           weeklyTarget: s.weeklyTarget ?? 0,
           monthlyTarget: s.monthlyTarget ?? 0,
+          // Bugun: pul faqat Billz; dona = Billz + manual (haftalik bilan bir xil mantiq).
+          todayTotal: bt?.total ?? 0,
+          todayItems: (bt?.items ?? 0) + (mt?.qty ?? 0),
           weekTotal: w?.total ?? 0,
           weekItems: w?.items ?? 0,
           trend: w?.trend ?? [0, 0, 0, 0, 0, 0, 0],

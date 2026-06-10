@@ -46,6 +46,8 @@ interface CeoInsights {
     hasBillz: boolean;
     weeklyTarget: number;
     monthlyTarget: number;
+    todayTotal: number;
+    todayItems: number;
     weekTotal: number;
     weekItems: number;
     trend: number[];
@@ -245,7 +247,7 @@ export default async function CeoDashboardPage(): Promise<React.ReactElement> {
             <div>
               <div className="text-[14px] font-semibold">Doʻkonlar · jonli holat</div>
               <div className="text-[11.5px] text-[color:var(--ink-3)] mt-0.5">
-                Hafta savdosi va trend
+                Bugun va hafta · alohida
               </div>
             </div>
             <Link href="/ceo/stores" className="text-[12px] text-primary font-medium">
@@ -293,8 +295,7 @@ export default async function CeoDashboardPage(): Promise<React.ReactElement> {
                           {danger && <Badge tone="rose">attention</Badge>}
                         </div>
                         <div className="text-[11px] text-[color:var(--ink-3)] mt-0.5">
-                          {s.weekItems > 0 ? `${s.weekItems} dona` : "ma'lumot yo'q"}
-                          {s.hasBillz ? ' · Billz' : ''}
+                          {s.hasBillz ? 'Billz' : "qoʻlda"}
                         </div>
                       </div>
                       <Sparkline
@@ -310,30 +311,54 @@ export default async function CeoDashboardPage(): Promise<React.ReactElement> {
                         }
                       />
                     </div>
-                    <div className="flex items-baseline justify-between mt-2">
-                      <span className="text-[20px] font-semibold tracking-[-0.02em] tabular">
-                        {s.weekTotal > 0
-                          ? `${(s.weekTotal / 1_000_000).toFixed(1)}M`
-                          : '—'}{' '}
-                        <span className="text-[10.5px] text-[color:var(--ink-3)] font-medium">
-                          soʻm
-                        </span>
-                      </span>
-                      {targetProgress !== null && (
-                        <span
-                          className="text-[12px] font-semibold"
-                          style={{
-                            color:
-                              targetProgress >= 90
-                                ? 'var(--emerald)'
-                                : targetProgress >= 60
-                                  ? 'var(--ink-2)'
-                                  : 'var(--rose)',
-                          }}
-                        >
-                          {targetProgress.toFixed(0)}%
-                        </span>
-                      )}
+                    <div className="mt-2.5 grid grid-cols-2 gap-2">
+                      {/* Bugun (kunlik) */}
+                      <div className="rounded-[10px] px-2.5 py-1.5 bg-card border">
+                        <div className="text-[9.5px] uppercase tracking-[0.05em] text-[color:var(--ink-3)] font-medium">
+                          Bugun
+                        </div>
+                        <div className="text-[16px] font-semibold tracking-[-0.02em] tabular leading-tight">
+                          {s.todayTotal > 0 ? `${(s.todayTotal / 1_000_000).toFixed(1)}M` : '—'}
+                          <span className="text-[9.5px] text-[color:var(--ink-3)] font-medium ml-0.5">
+                            soʻm
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-[color:var(--ink-3)] mt-0.5 tabular">
+                          {s.todayItems} dona
+                        </div>
+                      </div>
+                      {/* Hafta (haftalik) */}
+                      <div className="rounded-[10px] px-2.5 py-1.5 bg-[color:var(--background-2)]">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9.5px] uppercase tracking-[0.05em] text-[color:var(--ink-3)] font-medium">
+                            Hafta
+                          </span>
+                          {targetProgress !== null && (
+                            <span
+                              className="text-[10px] font-semibold"
+                              style={{
+                                color:
+                                  targetProgress >= 90
+                                    ? 'var(--emerald)'
+                                    : targetProgress >= 60
+                                      ? 'var(--ink-2)'
+                                      : 'var(--rose)',
+                              }}
+                            >
+                              {targetProgress.toFixed(0)}%
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[16px] font-semibold tracking-[-0.02em] tabular leading-tight">
+                          {s.weekTotal > 0 ? `${(s.weekTotal / 1_000_000).toFixed(1)}M` : '—'}
+                          <span className="text-[9.5px] text-[color:var(--ink-3)] font-medium ml-0.5">
+                            soʻm
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-[color:var(--ink-3)] mt-0.5 tabular">
+                          {s.weekItems} dona
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
