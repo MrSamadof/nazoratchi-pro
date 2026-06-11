@@ -17,7 +17,8 @@ import { auditLogsService } from '../../src/modules/audit-logs/audit-logs.servic
 import { appSettingsService } from '../../src/modules/app-settings/app-settings.service.js';
 import { notifyUser, getBotUsername } from '../../src/notifications/telegram.js';
 import { billzService, BillzError } from '../../src/modules/billz/billz.service.js';
-import { startOfTashkentDay } from '../../src/core/utils/date.js';
+import { attendancesService } from '../../src/modules/attendances/attendances.service.js';
+import { startOfTashkentDay, addDays, parseTashkentDay } from '../../src/core/utils/date.js';
 import { logger } from '../../src/core/logger/logger.js';
 import { loadSession, requireCeo } from '../middleware/auth.js';
 import { getObjectIdParam } from '../middleware/params.js';
@@ -29,6 +30,91 @@ ceoRouter.get('/insights', async (_req, res) => {
   await connectDatabase();
   const insights = await getCeoInsights();
   res.json({ ok: true, ...insights });
+});
+
+// ---- Xodimlar davomati (CEO nazorat ko'rinishi) ----
+
+const dateOnly = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Sana formati noto'g'ri (YYYY-MM-DD)");
+
+const rosterQuery = z.object({ date: dateOnly.optional() });
+
+/**
+ * GET /api/ceo/attendance?date=YYYY-MM-DD — kunlik ro'yxat (default bugun).
+ */
+ceoRouter.get('/attendance', async (req: Request, res: Response) => {
+  try {
+    const q = rosterQuery.parse(req.query);
+    const day = q.date ? parseTashkentDay(q.date) : startOfTashkentDay();
+    await connectDatabase();
+    const roster = await attendancesService.getDailyRoster(day);
+    res.json({
+      ok: true,
+      date: roster.date,
+      summary: roster.summary,
+      rows: roster.rows.map((r) => ({
+        ...r,
+        checkIn: r.checkIn?.toISOString() ?? null,
+        checkOut: r.checkOut?.toISOString() ?? null,
+      })),
+    });
+  } catch (err) {
+    if (err instanceof ZodError) {
+      res.status(400).json({ ok: false, error: err.errors[0]?.message ?? "Noto'g'ri so'rov" });
+      return;
+    }
+    logger.error({ err }, 'CEO attendance roster');
+    res.status(500).json({ ok: false, error: 'Texnik xato' });
+  }
+});
+
+const historyQuery = z.object({
+  from: dateOnly.optional(),
+  to: dateOnly.optional(),
+});
+
+/**
+ * GET /api/ceo/attendance/:userId?from=YYYY-MM-DD&to=YYYY-MM-DD
+ * — bitta xodimning davomat tarixi (default oxirgi 30 kun).
+ */
+ceoRouter.get('/attendance/:userId', async (req: Request, res: Response) => {
+  const userId = getObjectIdParam(req, res, 'userId');
+  if (!userId) return;
+  try {
+    const q = historyQuery.parse(req.query);
+    const to = q.to ? parseTashkentDay(q.to) : startOfTashkentDay();
+    const from = q.from ? parseTashkentDay(q.from) : addDays(startOfTashkentDay(), -29);
+    await connectDatabase();
+    const history = await attendancesService.getEmployeeHistory(
+      new Types.ObjectId(userId),
+      from,
+      to,
+    );
+    res.json({
+      ok: true,
+      employee: history.employee,
+      days: history.days.map((d) => ({
+        date: d.date.toISOString(),
+        checkIn: d.checkIn?.toISOString() ?? null,
+        checkOut: d.checkOut?.toISOString() ?? null,
+        status: d.status,
+        lateMinutes: d.lateMinutes,
+        earlyLeaveMinutes: d.earlyLeaveMinutes,
+        penaltyAmount: d.penaltyAmount,
+        shiftType: d.shiftType,
+        isDayOff: d.isDayOff,
+      })),
+      totals: history.totals,
+    });
+  } catch (err) {
+    if (err instanceof ZodError) {
+      res.status(400).json({ ok: false, error: err.errors[0]?.message ?? "Noto'g'ri so'rov" });
+      return;
+    }
+    logger.error({ err }, 'CEO attendance history');
+    res.status(500).json({ ok: false, error: 'Texnik xato' });
+  }
 });
 
 function serializePenaltyRule(r: typeof PenaltyRule.prototype) {

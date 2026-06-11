@@ -138,13 +138,12 @@ adminRouter.get('/stores', async (req: Request, res: Response) => {
   res.json({ ok: true, stores: stores.map((s) => ({ id: s._id.toString(), name: s.name })) });
 });
 
-// Menejer/CEO — xodimlar ro'yxati (to'liq shakl, do'kon scope)
+// Menejer/CEO — xodimlar ro'yxati (to'liq shakl). Menejer barcha do'kondagi
+// xodimlarni ko'radi/tahrirlaydi (do'kon scope'i xodim boshqaruvida qo'llanmaydi).
 adminRouter.get('/users', async (req: Request, res: Response) => {
   await connectDatabase();
-  const scope = managerStoreScope(req);
   const includeDeleted = String(req.query.includeDeleted) === 'true';
   const filter: Record<string, unknown> = { role: 'employee' };
-  if (scope) filter.storeId = scope;
   if (!includeDeleted) filter.isActive = true;
   const list = await User.find(filter)
     .populate('storeId', 'name slug')
@@ -187,8 +186,9 @@ adminRouter.post('/users', async (req: Request, res: Response) => {
   }
 });
 
-// Helper: menejer faqat o'z scope'idagi employee'ni boshqaradi.
-async function loadManagedEmployee(req: Request, res: Response, id: string) {
+// Helper: menejer/CEO faqat employee rolidagi foydalanuvchini boshqaradi.
+// Do'kon scope'i qo'llanmaydi — menejer barcha do'kondagi xodimni tahrirlaydi.
+async function loadManagedEmployee(_req: Request, res: Response, id: string) {
   const target = await usersService.findById(id);
   if (!target) {
     res.status(404).json({ ok: false, error: 'Topilmadi' });
@@ -196,11 +196,6 @@ async function loadManagedEmployee(req: Request, res: Response, id: string) {
   }
   if (target.role !== 'employee') {
     res.status(403).json({ ok: false, error: 'Faqat xodimni boshqara olasiz' });
-    return null;
-  }
-  const scope = managerStoreScope(req);
-  if (scope && target.storeId?.toString() !== scope.toString()) {
-    res.status(403).json({ ok: false, error: "Bu xodim sizning do'koningizdan emas" });
     return null;
   }
   return target;
@@ -218,8 +213,7 @@ adminRouter.patch('/users/:id', async (req: Request, res: Response) => {
     await connectDatabase();
     const target = await loadManagedEmployee(req, res, id);
     if (!target) return;
-    const scope = managerStoreScope(req);
-    if (scope) delete (dto as Record<string, unknown>).storeId;
+    // Rolni shu endpoint orqali o'zgartirib bo'lmaydi (faqat /role, CEO uchun).
     delete (dto as Record<string, unknown>).role;
     const updated = await usersService.update(id, dto);
     await auditLogsService.log({

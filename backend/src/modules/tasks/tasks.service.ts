@@ -5,7 +5,7 @@ import type { Division } from '../../core/config/constants.js';
 
 export class TasksError extends Error {
   constructor(
-    public readonly code: 'NOT_FOUND' | 'FORBIDDEN' | 'NO_ASSIGNEES' | 'EXT_NOT_FOUND',
+    public readonly code: 'NOT_FOUND' | 'FORBIDDEN' | 'NO_ASSIGNEES' | 'EXT_NOT_FOUND' | 'NOT_DONE',
     message: string,
   ) {
     super(message);
@@ -121,6 +121,20 @@ export class TasksService {
       task.completedBy = null;
     }
     await task.save();
+    return task;
+  }
+
+  /**
+   * Topshiriqni o'chirish (manager/CEO). Faqat bajarilgan (`done`) topshiriq
+   * o'chiriladi — faol topshiriqlar tasodifan yo'qolib ketmasligi uchun.
+   */
+  async remove(taskId: Types.ObjectId | string): Promise<TaskDoc> {
+    const task = await Task.findById(taskId);
+    if (!task) throw new TasksError('NOT_FOUND', 'Topshiriq topilmadi');
+    if (task.status !== 'done') {
+      throw new TasksError('NOT_DONE', "Faqat bajarilgan topshiriqni o'chirish mumkin");
+    }
+    await task.deleteOne();
     return task;
   }
 

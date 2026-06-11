@@ -100,6 +100,25 @@ export const tasksApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [{ type: 'Task', id: 'LIST' }],
     }),
+
+    deleteTask: build.mutation<{ ok: boolean; error?: string }, { id: string }>({
+      query: ({ id }) => ({ url: `/tasks/${id}`, method: 'DELETE' }),
+      // Optimistik: karta darhol doskadan yo'qoladi.
+      async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
+        const patch = dispatch(
+          tasksApi.util.updateQueryData('listTasks', undefined, (draft) => {
+            const i = draft.findIndex((x) => x.id === id);
+            if (i !== -1) draft.splice(i, 1);
+          }),
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
+      invalidatesTags: [{ type: 'Task', id: 'LIST' }],
+    }),
   }),
 });
 
@@ -109,4 +128,5 @@ export const {
   useUpdateTaskStatusMutation,
   useRequestTaskExtensionMutation,
   useDecideTaskExtensionMutation,
+  useDeleteTaskMutation,
 } = tasksApi;

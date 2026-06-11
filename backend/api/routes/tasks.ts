@@ -175,6 +175,31 @@ tasksRouter.patch('/:id/status', async (req: Request, res: Response) => {
   }
 });
 
+/** DELETE /api/tasks/:id — bajarilgan topshiriqni o'chirish (manager/CEO). */
+tasksRouter.delete('/:id', requireManager, async (req: Request, res: Response) => {
+  const id = getObjectIdParam(req, res, 'id');
+  if (!id) return;
+  try {
+    await connectDatabase();
+    const task = await tasksService.remove(id);
+    await auditLogsService.log({
+      userId: req.auth!.user._id,
+      action: 'admin.config_changed',
+      targetType: 'Task',
+      targetId: task._id,
+      meta: { op: 'delete_task', title: task.title },
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    if (err instanceof TasksError) {
+      const code = err.code === 'NOT_FOUND' ? 404 : 400;
+      return void res.status(code).json({ ok: false, error: err.message });
+    }
+    logger.error({ err }, 'task delete xato');
+    res.status(500).json({ ok: false, error: 'Texnik xato' });
+  }
+});
+
 /** POST /api/tasks/:id/extension — muddat surish so'rovi. */
 tasksRouter.post('/:id/extension', async (req: Request, res: Response) => {
   const id = getObjectIdParam(req, res, 'id');

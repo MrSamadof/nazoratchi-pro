@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Bolt,
+  CalendarCheck,
   ChevronsUpDown,
+  ClipboardList,
   Cog,
   Home,
   Lightbulb,
@@ -34,6 +36,8 @@ const NAV = [
   { href: '/ceo/ai-analysis', label: 'AI tahlil', icon: Bolt },
   { href: '/ceo/team', label: 'Jamoa', icon: Users },
   { href: '/ceo/suggestions', label: 'Takliflar', icon: Lightbulb },
+  { href: '/ceo/tasks', label: 'Topshiriqlar', icon: ClipboardList },
+  { href: '/ceo/attendance', label: 'Xodimlar davomati', icon: CalendarCheck },
   { href: '/ceo/settings', label: 'Sozlamalar', icon: Cog },
 ];
 

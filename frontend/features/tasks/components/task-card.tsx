@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { CalendarClock, Check, Clock, Users, X } from 'lucide-react';
+import { CalendarClock, Check, Clock, Trash2, Users, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ import {
   useUpdateTaskStatusMutation,
   useRequestTaskExtensionMutation,
   useDecideTaskExtensionMutation,
+  useDeleteTaskMutation,
   type ApiTask,
   type TaskStatus,
 } from '@/services/tasksApi';
@@ -32,7 +33,9 @@ const NEXT_STATUS: Partial<Record<TaskStatus, { to: TaskStatus; label: string }>
 export function TaskCard({ task, canManage }: { task: ApiTask; canManage: boolean }): React.ReactElement {
   const [updateStatus] = useUpdateTaskStatusMutation();
   const [decideExt, { isLoading: deciding }] = useDecideTaskExtensionMutation();
+  const [deleteTask, { isLoading: deleting }] = useDeleteTaskMutation();
   const [extOpen, setExtOpen] = useState(false);
+  const [delOpen, setDelOpen] = useState(false);
 
   const pendingExt = task.extensions.filter((e) => e.status === 'pending');
   const next = NEXT_STATUS[task.status];
@@ -51,6 +54,16 @@ export function TaskCard({ task, canManage }: { task: ApiTask; canManage: boolea
       toast.success(decision === 'approve' ? 'Muddat surildi' : 'Rad etildi');
     } catch (err) {
       toast.error((err as { data?: { error?: string } })?.data?.error ?? 'Xatolik');
+    }
+  }
+
+  async function remove() {
+    try {
+      await deleteTask({ id: task.id }).unwrap();
+      toast.success("Topshiriq o'chirildi");
+      setDelOpen(false);
+    } catch (err) {
+      toast.error((err as { data?: { error?: string } })?.data?.error ?? "O'chirilmadi");
     }
   }
 
@@ -93,6 +106,16 @@ export function TaskCard({ task, canManage }: { task: ApiTask; canManage: boolea
           </Button>
         )}
         {task.status === 'done' && <Badge tone="emerald" dot>Bajarildi</Badge>}
+        {canManage && task.status === 'done' && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-[color:var(--rose)] ml-auto"
+            onClick={() => setDelOpen(true)}
+          >
+            <Trash2 /> O&apos;chirish
+          </Button>
+        )}
       </div>
 
       {/* Kutilayotgan muddat so'rovlari — rahbar/CEO hal qiladi */}
@@ -120,6 +143,30 @@ export function TaskCard({ task, canManage }: { task: ApiTask; canManage: boolea
       )}
 
       <ExtensionModal taskId={task.id} open={extOpen} onOpenChange={setExtOpen} />
+
+      <Modal open={delOpen} onOpenChange={setDelOpen}>
+        <ModalContent
+          icon={<Trash2 />}
+          iconTone="rose"
+          title="Topshiriqni o'chirish"
+          subtitle={task.title}
+          width={400}
+          footer={
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="ghost" onClick={() => setDelOpen(false)}>
+                Bekor qilish
+              </Button>
+              <Button type="button" variant="destructive" onClick={remove} disabled={deleting}>
+                <Trash2 /> O&apos;chirish
+              </Button>
+            </div>
+          }
+        >
+          <p className="text-[13px] text-[color:var(--ink-2)]">
+            Bu bajarilgan topshiriq butunlay o&apos;chiriladi. Bu amalni qaytarib bo&apos;lmaydi.
+          </p>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

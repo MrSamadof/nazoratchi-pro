@@ -124,7 +124,7 @@ In production all three run from the same Docker image as separate containers.
 - Lockout: 5 failed attempts → 15 min lock. New users register with `isApproved: false` and cannot log in until a manager/CEO approves them (`/admin/pending`).
 - **Roles: `employee` | `manager` | `ceo`.**
   - `employee` — own attendance, sales, approvals, suggestions.
-  - `manager` — employee actions + approvals, rewards, tasks, schedules, reports (store-scoped). Not tied to a store by default.
+  - `manager` — employee actions + approvals, rewards, tasks, schedules, reports (store-scoped). Not tied to a store by default. **Employee management (`/admin/users` list + edit/delete/reset-pin) is NOT store-scoped** — a manager sees and edits *all* `employee`-role users across stores (incl. store reassignment), but still cannot manage `manager`/`ceo` users or change roles. Other admin views (overview, approvals, off-site, reports) remain store-scoped via `managerStoreScope`.
   - `ceo` — everything + CEO panel (integrations, system settings, all users, penalty rules, audit logs).
 - **API guards** (`backend/api/middleware/auth.ts`): `loadSession` (always, attaches `req.auth`), then `requireAuth`, `requireManager` (manager|ceo), or `requireCeo`.
 - **Frontend guards** (`frontend/lib/session.ts`): `requireSession`, `requireManagerSession`, `requireCeoSession` — used in Server Components; `frontend/middleware.ts` only checks cookie presence.

@@ -1,6 +1,16 @@
 'use client';
 
-import { Bolt, Cog, Home, Lightbulb, Store, Users, Wallet } from 'lucide-react';
+import {
+  Bolt,
+  CalendarCheck,
+  ClipboardList,
+  Cog,
+  Home,
+  Lightbulb,
+  Store,
+  Users,
+  Wallet,
+} from 'lucide-react';
 import { MobileMenuDrawer, type MobileMenuItem } from '@/components/mobile-menu-drawer';
 import { useGetNewSuggestionCountQuery } from '@/services/suggestionsApi';
 
@@ -11,6 +21,8 @@ const NAV: MobileMenuItem[] = [
   { href: '/ceo/ai-analysis', label: 'AI tahlil', icon: Bolt },
   { href: '/ceo/team', label: 'Jamoa', icon: Users },
   { href: '/ceo/suggestions', label: 'Takliflar', icon: Lightbulb },
+  { href: '/ceo/tasks', label: 'Topshiriqlar', icon: ClipboardList },
+  { href: '/ceo/attendance', label: 'Xodimlar davomati', icon: CalendarCheck },
   { href: '/ceo/settings', label: 'Sozlamalar', icon: Cog },
 ];
 
