@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { z, ZodError } from 'zod';
 import { connectDatabase } from '../../src/core/database/connection.js';
-import { storesService } from '../../src/modules/stores/stores.service.js';
+import { storesService, DuplicateSlugError } from '../../src/modules/stores/stores.service.js';
 import { auditLogsService } from '../../src/modules/audit-logs/audit-logs.service.js';
 import { loadSession, requireCeo } from '../middleware/auth.js';
 import { getObjectIdParam } from '../middleware/params.js';
@@ -79,11 +79,6 @@ storesRouter.post('/', loadSession, requireCeo, async (req: Request, res: Respon
   try {
     const dto = storeDto.parse(req.body);
     await connectDatabase();
-    const existing = await storesService.findBySlug(dto.slug);
-    if (existing) {
-      res.status(400).json({ ok: false, error: 'Bu slug allaqachon ishlatilgan' });
-      return;
-    }
     const created = await storesService.create(dto);
     await auditLogsService.log({
       userId: req.auth!.user._id,
@@ -96,6 +91,16 @@ storesRouter.post('/', loadSession, requireCeo, async (req: Request, res: Respon
   } catch (err) {
     if (err instanceof ZodError) {
       res.status(400).json({ ok: false, error: err.errors[0]?.message });
+      return;
+    }
+    if (err instanceof DuplicateSlugError) {
+      res.status(400).json({ ok: false, error: err.message });
+      return;
+    }
+    // Himoya qatlami: poyga holatida (yoki boshqa yo'l bilan) slug indeksi
+    // E11000 bersa ham, foydalanuvchiga tushunarli xabar beramiz.
+    if ((err as { code?: number })?.code === 11000) {
+      res.status(400).json({ ok: false, error: 'Bu slug allaqachon ishlatilgan' });
       return;
     }
     logger.error({ err }, 'Store create');

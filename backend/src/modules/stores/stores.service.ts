@@ -1,6 +1,26 @@
 import { Store, type StoreDoc, type StoreKind } from './stores.model.js';
 import type { Types } from 'mongoose';
 
+/**
+ * Bir xil slug bilan do'kon yaratishga urinilganda tashlanadi.
+ * `deletedStore` — to'qnashgan do'kon yumshoq o'chirilganmi (isActive:false).
+ * Slug indeksi global bo'lgani uchun o'chirilgan do'kon ham slug'ni band qiladi;
+ * route shu xatoni ushlab, foydalanuvchiga tushunarli xabar beradi
+ * (umumiy "Texnik xato" o'rniga).
+ */
+export class DuplicateSlugError extends Error {
+  readonly deletedStore: boolean;
+  constructor(deletedStore: boolean) {
+    super(
+      deletedStore
+        ? 'Bu nomdagi do\'kon avval o\'chirilgan — boshqa nom (slug) tanlang yoki uni qayta tiklang'
+        : 'Bu slug allaqachon ishlatilgan',
+    );
+    this.name = 'DuplicateSlugError';
+    this.deletedStore = deletedStore;
+  }
+}
+
 export interface StoreInput {
   name: string;
   slug: string;
@@ -30,11 +50,23 @@ export class StoresService {
     return Store.findOne({ slug, isActive: true });
   }
 
+  /** Slug bo'yicha qidiradi — yumshoq o'chirilgan do'konlarni ham qamraydi. */
+  async findBySlugAny(slug: string): Promise<StoreDoc | null> {
+    return Store.findOne({ slug });
+  }
+
   async findBillzStores(): Promise<StoreDoc[]> {
     return Store.find({ hasBillz: true, isActive: true, billzUuid: { $ne: null } });
   }
 
   async create(input: StoreInput): Promise<StoreDoc> {
+    // Slug indeksi global (o'chirilgan do'konlarni ham qamraydi) — shuning uchun
+    // yaratishdan oldin har qanday holatdagi to'qnashuvni tekshiramiz. Bu raw
+    // E11000 ni "Texnik xato"ga aylanishidan saqlaydi.
+    const clash = await this.findBySlugAny(input.slug);
+    if (clash) {
+      throw new DuplicateSlugError(!clash.isActive);
+    }
     return Store.create({
       name: input.name,
       slug: input.slug,
